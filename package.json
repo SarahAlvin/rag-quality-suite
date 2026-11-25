@@ -1,0 +1,30 @@
+{
+  "name": "rag-quality-suite",
+  "version": "0.1.0",
+  "description": "Automated quality suite for a RAG chatbot: LLM evaluation, retrieval metrics, API, UI, ingestion and resilience tests.",
+  "private": true,
+  "type": "commonjs",
+  "scripts": {
+    "test:api": "playwright test --project=api",
+    "test:ui": "playwright test --project=ui",
+    "test:eval": "playwright test --project=eval",
+    "test:ingest": "playwright test --project=ingest",
+    "test:resilience": "playwright test --project=resilience",
+    "test:offline": "playwright test --project=offline",
+    "report": "playwright show-report",
+    "typecheck": "tsc",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "keywords": ["qa", "playwright", "llm-evaluation", "rag", "testing"],
+  "author": "SarahAlvin",
+  "license": "MIT",
+  "devDependencies": {
+    "@playwright/test": "1.65.1",
+    "@types/node": "26.6.10",
+    "dotenv": "18.0.10",
+    "prettier": "3.10.1",
+    "typescript": "7.0.2",
+    "zod": "4.6.7"
+  }
+}

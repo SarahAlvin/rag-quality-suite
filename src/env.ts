@@ -1,0 +1,24 @@
+// Loads and validates settings from .env once, so every test fails fast with a clear message
+// instead of a confusing network error when something is missing.
+import 'dotenv/config';
+import { z } from 'zod';
+
+const EnvSchema = z.object({
+  SUT_BASE_URL: z.string().url(),
+  SUT_USER: z.string().min(1),
+  SUT_PASSWORD: z.string().min(1),
+  SUT_CHAT_PATH: z.string().startsWith('/'),
+  QDRANT_URL: z.string().url(),
+  QDRANT_API_KEY: z.string().min(1),
+  QDRANT_COLLECTION: z.string().min(1),
+  GROQ_API_KEY: z.string().optional(),
+  JUDGE_MODEL: z.string().default('qwen/qwen3.8-27b'),
+});
+
+const parsed = EnvSchema.safeParse(process.env);
+if (!parsed.success) {
+  const missing = parsed.error.issues.map((i) => `  - ${i.path.join('.')}: ${i.message}`).join('\n');
+  throw new Error(`Invalid or missing settings in .env:\n${missing}\nCopy .env.example to .env and fill it in.`);
+}
+
+export const env = parsed.data;
