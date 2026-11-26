@@ -1,0 +1,15 @@
+{
+  "output": "Zarnoor Tea Co. was founded in **1987** in Murree.\n\nSources:\n- zarnoor-tea.md\n- notes/company-history.txt (p. 2)",
+  "intermediateSteps": [
+    {
+      "action": {
+        "tool": "search_knowledge_base",
+        "toolInput": { "input": "Zarnoor Tea Co. founding year" },
+        "log": "synthetic",
+        "toolCallId": "synthetic-1",
+        "type": "tool_call"
+      },
+      "observation": "[{\"response\":[{\"type\":\"text\",\"text\":\"{\\\"pageContent\\\":\\\"Zarnoor Tea Co. was founded in 1987 in Murree.\\\",\\\"metadata\\\":{\\\"source\\\":\\\"documents/qa-fixtures/zarnoor-tea.md\\\",\\\"filename\\\":\\\"zarnoor-tea.md\\\",\\\"doc_id\\\":\\\"aaa\\\",\\\"extraction\\\":\\\"text\\\"}}\"},{\"type\":\"text\",\"text\":\"{\\\"pageContent\\\":\\\"The company moved to Abbottabad in 2001.\\\",\\\"metadata\\\":{\\\"source\\\":\\\"documents/qa-fixtures/notes/company-history.txt\\\",\\\"filename\\\":\\\"company-history.txt\\\",\\\"doc_id\\\":\\\"bbb\\\",\\\"extraction\\\":\\\"text\\\"}}\"}]}]"
+    }
+  ]
+}
