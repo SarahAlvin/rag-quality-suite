@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { z } from 'zod';
 
 export const CATEGORIES = [
-  'factual', 'multi-doc', 'pdf-ocr', 'conflict', 'follow-up', 'out-of-scope', 'privacy', 'injection', 'robustness',
+  'factual', 'multi-doc', 'pdf-ocr', 'conflict', 'follow-up', 'out-of-scope', 'privacy', 'injection', 'robustness', 'hard',
 ] as const;
 export type Category = (typeof CATEGORIES)[number];
 
