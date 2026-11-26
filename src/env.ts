@@ -5,6 +5,8 @@ import { z } from 'zod';
 
 const EnvSchema = z.object({
   SUT_BASE_URL: z.string().url(),
+  // The chatbot's canonical public address (n8n's WEBHOOK_URL), e.g. its Tailscale HTTPS name. Optional.
+  SUT_PUBLIC_URL: z.string().url().optional(),
   SUT_USER: z.string().min(1),
   SUT_PASSWORD: z.string().min(1),
   SUT_CHAT_PATH: z.string().startsWith('/'),

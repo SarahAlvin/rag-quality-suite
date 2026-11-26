@@ -9,6 +9,8 @@ and is marked `test.fail()` with the bug ID until it's fixed. These will also be
 | BUG-002 | Missing or non-text `chatInput` is answered "AI service is busy" | Low | Open | Exploratory API probe, 2026-11-26 |
 | BUG-003 | Upload during a scheduled scan can leave a stale "failed" registry status | Low | Open | Chatbot Phase 7 investigation, 2026-11-18 |
 | BUG-004 | No timeout on the Gemini call: under load an answer took 147.6 s and the Groq fallback never kicked in | Medium | Open | API "never hangs" test, 2026-11-26 |
+| BUG-005 | Upload form can't be submitted in any browser ("Problem submitting response"): n8n's sandbox header makes the page's origin `null`, so its own POST is blocked by CORS | **High** | Fixed (Caddy header override for /form/*) | UI end-to-end test, 2026-11-27 |
+| BUG-006 | On `localhost`, the upload form never shows "Upload finished" (spins forever): its status poll goes to the public Tailscale address, blocked as cross-origin. Regression from switching `WEBHOOK_URL` to Tailscale | Medium | Open: workaround is to use the public address everywhere | UI end-to-end test, 2026-11-27 |
 | OBS-001 | Empty question and unknown `action` still call the AI (quota use, up to ~19 s) | Observation | Open | Exploratory API probe, 2026-11-26 |
 | OBS-002 | Broad summary questions take 15–27 s (over the 20 s budget for factual questions) | Observation | Open | API latency test, 2026-11-26 |
 | OBS-003 | The bot won't recall facts the user stated earlier in the chat (by design: answers only from documents) | Observation (design) | Accepted | Session memory test, 2026-11-26 |
@@ -23,6 +25,8 @@ and is marked `test.fail()` with the bug ID until it's fixed. These will also be
 | TD-003 | Negative tests sent string bodies that Playwright JSON-encoded again (`'abc'` → `'"abc"'`) | Send raw bytes (`Buffer`) |
 | TD-004 | Memory test planted a fact in the chat ("locker number"), which the grounded bot rightly refuses to repeat (OBS-003) | Test reference resolution ("it") instead |
 | TD-005 | Scorecard reported "hit rate 0 %" for runs with no retrieval cases, and enforced latency percentiles on 4-case runs | Retrieval metrics are n/a when unmeasured; latency limits apply to full runs only |
+| TD-006 | Mocked reply cited `notes/tea-tasting-log.txt`, a format the real bot never produces; the page showed it as given and the test expected the folder stripped | Mocks mirror the real reply format (bare filenames) |
+| TD-007 | Playwright's headless browser download had been cut off (8 MB of 287 MB), so every UI test failed with `spawn EFTYPE` | Reinstalled; worth a setup check in CI |
 
 **Known limitation:** the suite runs against the real knowledge base, which also holds non-fixture documents. Tests must
 not assume they only see the fixtures. Expectations check what must (not) appear, not that nothing else exists.
@@ -81,6 +85,54 @@ not assume they only see the fixtures. Expectations check what must (not) appear
 **Likely cause:** two ingest runs of the same file can overlap; there is no per-file lock or "last writer wins by content hash" check.
 
 **Tests:** planned in Phase 7 (ingestion).
+
+---
+
+## BUG-005: Upload form can't be submitted in any browser
+
+**Severity:** High. A whole feature (upload documents from the browser) is unusable, while API-level tests pass.
+
+**Steps:** open `http://localhost:8080/form/kb-upload` in a browser, log in, choose a `.md` file, click **Upload and index**.
+
+**Expected:** the "Upload finished" page listing the file as indexed.
+
+**Actual:** "Problem submitting response. The form could not be submitted." The file is not saved. Browser console:
+`Access to fetch at 'http://localhost:8080/form/kb-upload' from origin 'null' has been blocked by CORS policy`.
+
+**Root cause:** n8n 2.47.7 serves form pages with
+`Content-Security-Policy: sandbox allow-forms allow-scripts …` **without** `allow-same-origin`. A sandboxed page gets an
+opaque (`null`) origin, so the form's own `fetch` POST to its URL is cross-origin, and n8n sends no CORS headers.
+Earlier upload checks used `curl`, which doesn't enforce CORS, so they passed.
+
+**Fix (in the chatbot repo):** Caddy overrides the header for `/form/*` only, adding `allow-same-origin`. Trade-off: this
+lifts the sandbox's origin isolation for n8n's own form pages (behind the password); every other route keeps n8n's header.
+
+**Tests:** `tests/ui/upload.spec.ts` (now passing); diagnosis recorded with a network/console capture in a browser.
+
+**Possibly related:** n8n's hosted chat page (`/webhook/…/chat` opened in a browser) gets the same header. The custom
+chat page at `/app/` is unaffected (served by Caddy).
+
+---
+
+## BUG-006: On localhost the upload form never finishes (regression)
+
+**Severity:** Medium. The file IS uploaded and indexed, but the user on `http://localhost:8080` never sees the result and
+may upload again. On the public Tailscale address the form completes normally.
+
+**Steps:** open `http://localhost:8080/form/kb-upload`, upload a file.
+
+**Expected:** "Upload finished" page.
+
+**Actual:** the button spins indefinitely. Console: `Access to fetch at 'https://desktop-….ts.net/form-waiting/786/n8n-execution-status?…'
+from origin 'http://localhost:8080' has been blocked by CORS policy`.
+
+**Root cause:** after submit, n8n's form script polls `<WEBHOOK_URL>/form-waiting/<execution>/…`. `WEBHOOK_URL` was changed to the
+Tailscale address (chatbot Phase 9) so links work on the phone, so on localhost the poll is cross-origin. n8n supports one
+public address only, so either localhost or the public address can complete the flow, not both.
+
+**Workaround / recommendation:** use the public address on every device, including the PC (it's on the same tailnet).
+
+**Tests:** `tests/ui/upload.spec.ts`: "on the public address…" passes; "on localhost…" is `test.fail()` with this ID.
 
 ---
 
