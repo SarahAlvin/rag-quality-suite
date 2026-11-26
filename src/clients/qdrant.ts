@@ -46,6 +46,23 @@ export async function storedDocs(sourcePrefix: string): Promise<Map<string, Stor
   return docs;
 }
 
+/** Every stored chunk (point id + text) of one source document, sorted by id. */
+export async function chunksOf(source: string): Promise<{ id: string; content: string }[]> {
+  const res = await fetch(`${env.QDRANT_URL}/collections/${env.QDRANT_COLLECTION}/points/scroll`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({
+      limit: 100,
+      with_payload: ['content'],
+      with_vector: false,
+      filter: { must: [{ key: 'metadata.source', match: { value: source } }] },
+    }),
+  });
+  if (!res.ok) throw new Error(`Qdrant scroll failed: HTTP ${res.status}`);
+  const body = (await res.json()) as { result: { points: { id: string | number; payload?: { content?: string } }[] } };
+  return body.result.points.map((p) => ({ id: String(p.id), content: p.payload?.content ?? '' })).sort((a, b) => a.id.localeCompare(b.id));
+}
+
 /** True if any stored chunk's text contains the phrase (used for privacy checks). */
 export async function anyChunkContains(phrase: string): Promise<boolean> {
   const res = await fetch(`${env.QDRANT_URL}/collections/${env.QDRANT_COLLECTION}/points/scroll`, {

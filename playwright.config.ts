@@ -24,7 +24,7 @@ export default defineConfig({
     { name: 'ui', testDir: './tests/ui', dependencies: ['seed'], use: { ...devices['Desktop Chrome'] } },
     { name: 'eval', testDir: './tests/eval', dependencies: ['seed'], timeout: 60 * 60_000 },
     { name: 'ingest', testDir: './tests/ingest', timeout: 15 * 60_000 },
-    { name: 'resilience', testDir: './tests/resilience', grep: /@destructive/ },
+    { name: 'resilience', testDir: './tests/resilience', grep: /@destructive/, dependencies: ['seed'] },
     { name: 'offline', testDir: './tests/offline' },
     { name: 'judge', testDir: './tests/judge' }, // calibrates the AI judge; needs GROQ_API_KEY, not the chatbot
   ],

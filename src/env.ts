@@ -11,6 +11,8 @@ const EnvSchema = z.object({
   SUT_PASSWORD: z.string().min(1),
   SUT_CHAT_PATH: z.string().startsWith('/'),
   SUT_DOCUMENTS_DIR: z.string().min(1), // the chatbot's documents folder on this machine (fixtures go in qa-fixtures/)
+  // The chatbot repo on this machine (compose.yml + workflows/). Only the opt-in resilience tests use it.
+  SUT_REPO_DIR: z.string().optional(),
   QDRANT_URL: z.string().url(),
   QDRANT_API_KEY: z.string().min(1),
   QDRANT_COLLECTION: z.string().min(1),

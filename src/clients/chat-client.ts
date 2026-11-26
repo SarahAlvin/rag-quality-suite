@@ -46,7 +46,19 @@ export class ChatClient {
       timeout: REQUEST_TIMEOUT_MS,
     });
     const latencyMs = Date.now() - started;
-    const body = ChatResponseSchema.parse(await res.json());
+    const text = await res.text();
+    let json: unknown;
+    try {
+      json = JSON.parse(text);
+    } catch {
+      throw new Error(`chat reply is not JSON (HTTP ${res.status()}): ${text.slice(0, 300)}`);
+    }
+    const parsed = ChatResponseSchema.safeParse(json);
+    if (!parsed.success) {
+      const issues = parsed.error.issues.map((i) => `${i.path.join('.') || '(root)'}: ${i.message}`).join('; ');
+      throw new Error(`chat reply doesn't match the documented schema (HTTP ${res.status()}): ${issues}. Body: ${text.slice(0, 300)}`);
+    }
+    const body = parsed.data;
     const searches = parseSearches(body);
     return {
       status: res.status(),

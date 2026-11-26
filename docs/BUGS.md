@@ -10,6 +10,7 @@ and is marked `test.fail()` with the bug ID until it's fixed. These will also be
 | BUG-003 | Upload during a scheduled scan can leave a stale "failed" registry status | Low | Open | Chatbot Phase 7 investigation, 2026-11-18 |
 | BUG-004 | No timeout on the Gemini call: under load an answer took 147.6 s and the Groq fallback never kicked in | Medium | Open | API "never hangs" test, 2026-11-26 |
 | BUG-005 | Upload form can't be submitted in any browser ("Problem submitting response"): n8n's sandbox header makes the page's origin `null`, so its own POST is blocked by CORS | **High** | Fixed (Caddy header override for /form/*) | UI end-to-end test, 2026-11-27 |
+| BUG-007 | A failure before the AI agent (e.g. the Config sub-workflow unavailable) returns a raw `500 Error in workflow` instead of the friendly message | Low | Open | Resilience tests, 2026-11-27 |
 | BUG-006 | On `localhost`, the upload form never shows "Upload finished" (spins forever): its status poll goes to the public Tailscale address, blocked as cross-origin. Regression from switching `WEBHOOK_URL` to Tailscale | Medium | Open: workaround is to use the public address everywhere | UI end-to-end test, 2026-11-27 |
 | OBS-001 | Empty question and unknown `action` still call the AI (quota use, up to ~19 s) | Observation | Open | Exploratory API probe, 2026-11-26 |
 | OBS-002 | Broad summary questions take 15–27 s (over the 20 s budget for factual questions) | Observation | Open | API latency test, 2026-11-26 |
@@ -27,6 +28,7 @@ and is marked `test.fail()` with the bug ID until it's fixed. These will also be
 | TD-005 | Scorecard reported "hit rate 0 %" for runs with no retrieval cases, and enforced latency percentiles on 4-case runs | Retrieval metrics are n/a when unmeasured; latency limits apply to full runs only |
 | TD-006 | Mocked reply cited `notes/tea-tasting-log.txt`, a format the real bot never produces; the page showed it as given and the test expected the folder stripped | Mocks mirror the real reply format (bare filenames) |
 | TD-007 | Playwright's headless browser download had been cut off (8 MB of 287 MB), so every UI test failed with `spawn EFTYPE` | Reinstalled; worth a setup check in CI |
+| TD-008 | Resilience tests switched models by importing KB · Config, which un-publishes it until the new publish applies; questions sent after a fixed 10 s wait sometimes hit the gap (HTTP 500 at "Get config") | Wait until n8n lists Config as active, plus 15 s; chat client errors now include HTTP status and body |
 
 **Known limitation:** the suite runs against the real knowledge base, which also holds non-fixture documents. Tests must
 not assume they only see the fixtures. Expectations check what must (not) appear, not that nothing else exists.
@@ -111,6 +113,22 @@ lifts the sandbox's origin isolation for n8n's own form pages (behind the passwo
 
 **Possibly related:** n8n's hosted chat page (`/webhook/…/chat` opened in a browser) gets the same header. The custom
 chat page at `/app/` is unaffected (served by Caddy).
+
+---
+
+## BUG-007: Failures before the agent return a raw 500
+
+**Severity:** Low. Rare in normal use, but the user sees a raw error instead of the friendly message the chatbot was designed to show.
+
+**How found:** the resilience tests swap the model settings by importing a new version of the **KB · Config** sub-workflow. Questions
+arriving while it was briefly unpublished failed (n8n executions 840, 860, 866) at node **Get config**:
+`Workflow is not active and cannot be executed`. The reply was `HTTP 500 {"message":"Error in workflow"}`.
+
+**Root cause:** only the AI Agent node has an error branch (to the friendly message). Nodes before it (Get config, the memory
+lookup) have none, so their failures surface as raw 500s. Same family as BUG-001.
+
+**Suggested fix:** set the chat workflow's error handling so any failing node leads to the friendly message (e.g. "continue (using
+error output)" on Get config, or a single error branch at the end).
 
 ---
 
