@@ -5,6 +5,8 @@
   "private": true,
   "type": "commonjs",
   "scripts": {
+    "seed": "playwright test --project=seed",
+    "fixtures:remove": "playwright test --project=fixtures-remove",
     "test:api": "playwright test --project=api",
     "test:ui": "playwright test --project=ui",
     "test:eval": "playwright test --project=eval",

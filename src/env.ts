@@ -8,6 +8,7 @@ const EnvSchema = z.object({
   SUT_USER: z.string().min(1),
   SUT_PASSWORD: z.string().min(1),
   SUT_CHAT_PATH: z.string().startsWith('/'),
+  SUT_DOCUMENTS_DIR: z.string().min(1), // the chatbot's documents folder on this machine (fixtures go in qa-fixtures/)
   QDRANT_URL: z.string().url(),
   QDRANT_API_KEY: z.string().min(1),
   QDRANT_COLLECTION: z.string().min(1),

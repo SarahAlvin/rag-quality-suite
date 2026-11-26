@@ -2,7 +2,8 @@ import { defineConfig, devices } from '@playwright/test';
 import { env } from './src/env';
 
 // One Playwright config, several "projects" (test groups) run with npm scripts:
-//   api, ui, eval, ingest, resilience (opt-in), offline (no chatbot needed; runs in CI).
+//   seed (runs first automatically), api, ui, eval, ingest, resilience (opt-in),
+//   offline (no chatbot needed; runs in CI), fixtures-remove (on demand).
 export default defineConfig({
   testDir: './tests',
   fullyParallel: false, // the chatbot shares free-tier quotas, so tests run one at a time
@@ -17,9 +18,11 @@ export default defineConfig({
     screenshot: 'only-on-failure',
   },
   projects: [
-    { name: 'api', testDir: './tests/api' },
-    { name: 'ui', testDir: './tests/ui', use: { ...devices['Desktop Chrome'] } },
-    { name: 'eval', testDir: './tests/eval', timeout: 60 * 60_000 },
+    { name: 'seed', testDir: './tests/setup', testMatch: /seed\.setup\.ts/ },
+    { name: 'fixtures-remove', testDir: './tests/setup', testMatch: /remove-fixtures\.setup\.ts/ },
+    { name: 'api', testDir: './tests/api', dependencies: ['seed'] },
+    { name: 'ui', testDir: './tests/ui', dependencies: ['seed'], use: { ...devices['Desktop Chrome'] } },
+    { name: 'eval', testDir: './tests/eval', dependencies: ['seed'], timeout: 60 * 60_000 },
     { name: 'ingest', testDir: './tests/ingest', timeout: 15 * 60_000 },
     { name: 'resilience', testDir: './tests/resilience', grep: /@destructive/ },
     { name: 'offline', testDir: './tests/offline' },

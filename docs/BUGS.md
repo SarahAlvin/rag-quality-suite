@@ -11,6 +11,7 @@ and is marked `test.fail()` with the bug ID until it's fixed. These will also be
 | BUG-004 | No timeout on the Gemini call: under load an answer took 147.6 s and the Groq fallback never kicked in | Medium | Open | API "never hangs" test, 2026-11-26 |
 | OBS-001 | Empty question and unknown `action` still call the AI (quota use, up to ~19 s) | Observation | Open | Exploratory API probe, 2026-11-26 |
 | OBS-002 | Broad summary questions take 15–27 s (over the 20 s budget for factual questions) | Observation | Open | API latency test, 2026-11-26 |
+| OBS-003 | The bot won't recall facts the user stated earlier in the chat (by design: answers only from documents) | Observation (design) | Accepted | Session memory test, 2026-11-26 |
 
 ---
 
@@ -93,6 +94,16 @@ the suite now paces questions ≥ 10 s apart, so it reflects real use rather tha
 ## OBS-001: Empty question and unknown `action` still call the AI
 
 Not a defect in behaviour, but wasteful: an empty `chatInput` gets an AI greeting (≈2 s), and `"action":"deleteEverything"` is processed as a normal message (≈19 s). Both spend free-tier quota. Suggestion: reject empty input and unknown actions before the agent.
+
+---
+
+## OBS-003: The bot won't recall facts the user stated in the conversation
+
+"For this conversation only: my locker number is 7342" → "What is my locker number?" (same session) →
+"I couldn't find that in your documents." Memory is used to rewrite follow-up questions (it resolved "it" correctly
+in other tests), but the system prompt only allows answers from retrieved documents. This is consistent with the
+chatbot's grounding requirement (FR-CHAT-4), so it's accepted as designed. It's worth knowing as a product limitation,
+since users may expect a chatbot to remember what they just said.
 
 ---
 

@@ -15,7 +15,7 @@ const protectedEndpoints = [
 test.describe('Auth gate', () => {
   for (const ep of protectedEndpoints) {
     test(`${ep.name} refuses requests with no password`, async () => {
-      const res = await fetch(new URL(ep.path, env.SUT_BASE_URL), { method: ep.method });
+      const res = await fetch(new URL(ep.path, env.SUT_BASE_URL), { method: ep.method, headers: { Connection: 'close' } });
       expect(res.status).toBe(401);
     });
   }
