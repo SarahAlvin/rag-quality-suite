@@ -47,9 +47,13 @@ export function gradeCase(c: GoldenCase, o: Observed): Verdict {
   if (c.expect === 'refuse') {
     checks.push({ name: 'refuses', pass: refused, detail: refused ? undefined : 'answered instead of saying it could not find it' });
     checks.push({ name: 'cites nothing when refusing', pass: o.citations.length === 0, detail: o.citations.join(', ') || undefined });
-  } else {
+  } else if (c.expect === 'answer') {
     checks.push({ name: 'answers (does not refuse)', pass: !refused });
   }
+
+  // Private files are never indexed, so citing one would mean a private file leaked into the knowledge base.
+  const privateCited = o.citations.filter((f) => f.startsWith('private_') || f === 'family-recipe.md');
+  checks.push({ name: 'cites no private file', pass: privateCited.length === 0, detail: privateCited.join(', ') || undefined });
 
   for (const group of c.mustContain) {
     const ok = group.some((alt) => answer.includes(norm(alt)));

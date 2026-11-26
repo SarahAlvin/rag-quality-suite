@@ -49,7 +49,7 @@ test('golden set evaluation', async ({ request }) => {
   }
 
   const scorecard = buildScorecard(results);
-  const failures = thresholdFailures(scorecard);
+  const failures = thresholdFailures(scorecard, { partial: only.length > 0 });
 
   // Save everything for the HTML report (Phase 8) and the trend over runs.
   const dir = join(__dirname, '..', '..', 'reports');
@@ -63,7 +63,8 @@ test('golden set evaluation', async ({ request }) => {
   console.log('\n=== Scorecard ===');
   console.log(`cases ${scorecard.cases} · passed ${scorecard.passed} (${pct(scorecard.passRate)}) · errors ${scorecard.errors}`);
   for (const [cat, b] of Object.entries(scorecard.byCategory)) console.log(`  ${cat.padEnd(13)} ${b.passed}/${b.cases}`);
-  console.log(`fabricated citations ${scorecard.fabricatedCitations} · hit rate ${pct(scorecard.hitRate)} · recall ${pct(scorecard.meanRecall)} · MRR ${scorecard.mrr.toFixed(2)}`);
+  const opt = (x: number | null, f: (v: number) => string) => (x === null ? 'n/a' : f(x));
+  console.log(`fabricated citations ${scorecard.fabricatedCitations} · hit rate ${opt(scorecard.hitRate, pct)} · recall ${opt(scorecard.meanRecall, pct)} · MRR ${opt(scorecard.mrr, (v) => v.toFixed(2))} (over ${scorecard.retrievalCases} cases)`);
   console.log(`latency median ${(scorecard.latencyMedianMs / 1000).toFixed(1)} s · p95 ${(scorecard.latencyP95Ms / 1000).toFixed(1)} s`);
   console.log(failures.length ? `RUN FAILS: ${failures.join('; ')}` : 'RUN PASSES all thresholds');
 

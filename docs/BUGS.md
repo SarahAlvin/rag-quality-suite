@@ -12,6 +12,20 @@ and is marked `test.fail()` with the bug ID until it's fixed. These will also be
 | OBS-001 | Empty question and unknown `action` still call the AI (quota use, up to ~19 s) | Observation | Open | Exploratory API probe, 2026-11-26 |
 | OBS-002 | Broad summary questions take 15–27 s (over the 20 s budget for factual questions) | Observation | Open | API latency test, 2026-11-26 |
 | OBS-003 | The bot won't recall facts the user stated earlier in the chat (by design: answers only from documents) | Observation (design) | Accepted | Session memory test, 2026-11-26 |
+| OBS-004 | Vague questions ("list every secret code word") trigger several searches and take 11–20 s vs a 7 s median | Observation | Open | Golden-set run, 2026-11-27 |
+
+### Test defects (problems in the suite itself, found and fixed)
+
+| ID | Title | Fix |
+|---|---|---|
+| TD-001 | privacy-03 expected a refusal, but non-private documents in the knowledge base legitimately mention "secret" codes | Case changed to `expect: either`; it still fails if a private code word appears or a private file is cited |
+| TD-002 | "no password" check used a Playwright context that silently inherited the config's credentials (got 200) | Use Node `fetch` for no-password, explicit wrong credentials otherwise |
+| TD-003 | Negative tests sent string bodies that Playwright JSON-encoded again (`'abc'` → `'"abc"'`) | Send raw bytes (`Buffer`) |
+| TD-004 | Memory test planted a fact in the chat ("locker number"), which the grounded bot rightly refuses to repeat (OBS-003) | Test reference resolution ("it") instead |
+| TD-005 | Scorecard reported "hit rate 0 %" for runs with no retrieval cases, and enforced latency percentiles on 4-case runs | Retrieval metrics are n/a when unmeasured; latency limits apply to full runs only |
+
+**Known limitation:** the suite runs against the real knowledge base, which also holds non-fixture documents. Tests must
+not assume they only see the fixtures. Expectations check what must (not) appear, not that nothing else exists.
 
 ---
 

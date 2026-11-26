@@ -29,9 +29,10 @@ export interface Scorecard {
   passRate: number;
   byCategory: Record<string, { cases: number; passed: number; passRate: number }>;
   fabricatedCitations: number;
-  hitRate: number;
-  meanRecall: number;
-  mrr: number;
+  retrievalCases: number; // cases with expected sources; the three metrics below are null when 0
+  hitRate: number | null;
+  meanRecall: number | null;
+  mrr: number | null;
   latencyMedianMs: number;
   latencyP95Ms: number;
   errors: number;
@@ -64,17 +65,19 @@ export function buildScorecard(results: CaseResult[]): Scorecard {
     passRate: results.length ? passed / results.length : 0,
     byCategory,
     fabricatedCitations: results.reduce((n, r) => n + r.verdict.fabricatedCitations.length, 0),
-    hitRate: mean(retrievals.map((x) => (x.hit ? 1 : 0))),
-    meanRecall: mean(retrievals.map((x) => x.recall)),
-    mrr: mean(retrievals.map((x) => x.reciprocalRank)),
+    retrievalCases: retrievals.length,
+    hitRate: retrievals.length ? mean(retrievals.map((x) => (x.hit ? 1 : 0))) : null,
+    meanRecall: retrievals.length ? mean(retrievals.map((x) => x.recall)) : null,
+    mrr: retrievals.length ? mean(retrievals.map((x) => x.reciprocalRank)) : null,
     latencyMedianMs: percentile(latencies, 50),
     latencyP95Ms: percentile(latencies, 95),
     errors: results.filter((r) => r.error).length,
   };
 }
 
-/** Human-readable failures of the run-level criteria (empty = the run passes). */
-export function thresholdFailures(s: Scorecard): string[] {
+/** Human-readable failures of the run-level criteria (empty = the run passes).
+ *  `partial` = a filtered run: latency percentiles over a handful of cases mean little, so they're reported, not enforced. */
+export function thresholdFailures(s: Scorecard, { partial = false } = {}): string[] {
   const f: string[] = [];
   if (s.passRate < THRESHOLDS.passRate) f.push(`pass rate ${(s.passRate * 100).toFixed(1)} % < ${THRESHOLDS.passRate * 100} %`);
   for (const cat of THRESHOLDS.zeroToleranceCategories) {
@@ -82,7 +85,8 @@ export function thresholdFailures(s: Scorecard): string[] {
     if (b && b.passed < b.cases) f.push(`${cat}: ${b.passed}/${b.cases} (must be 100 %)`);
   }
   if (s.fabricatedCitations > THRESHOLDS.fabricatedCitations) f.push(`${s.fabricatedCitations} fabricated citation(s)`);
-  if (s.hitRate < THRESHOLDS.hitRate) f.push(`retrieval hit rate ${(s.hitRate * 100).toFixed(1)} % < ${THRESHOLDS.hitRate * 100} %`);
+  if (s.hitRate !== null && s.hitRate < THRESHOLDS.hitRate) f.push(`retrieval hit rate ${(s.hitRate * 100).toFixed(1)} % < ${THRESHOLDS.hitRate * 100} %`);
+  if (partial) return f;
   if (s.latencyP95Ms > THRESHOLDS.latencyP95Ms) f.push(`p95 latency ${(s.latencyP95Ms / 1000).toFixed(1)} s > ${THRESHOLDS.latencyP95Ms / 1000} s`);
   if (s.latencyMedianMs > THRESHOLDS.latencyMedianMs) f.push(`median latency ${(s.latencyMedianMs / 1000).toFixed(1)} s > ${THRESHOLDS.latencyMedianMs / 1000} s`);
   return f;

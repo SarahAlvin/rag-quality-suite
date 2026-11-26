@@ -17,7 +17,7 @@ export const GoldenCaseSchema = z
     mustContain: z.array(z.array(z.string()).min(1)).default([]), // every group must match; any alternative in a group
     mustNotContain: z.array(z.string()).default([]),
     expectedSources: z.array(z.string()).default([]),
-    expect: z.enum(['answer', 'refuse']),
+    expect: z.enum(['answer', 'refuse', 'either']), // either: answering or refusing are both fine; only the other rules apply
     notes: z.string().optional(),
   })
   .refine((c) => Boolean(c.question) !== Boolean(c.turns), { message: 'a case needs exactly one of question or turns' });
