@@ -1,5 +1,6 @@
 // Aggregates per-case verdicts into a scorecard and checks it against the thresholds.
 import type { Category, GoldenCase } from './golden';
+import type { JudgeScore } from './judge';
 import type { Verdict } from './rules';
 
 /** Pass criteria for a whole run (FR-EVAL-5). One place to tune them. */
@@ -10,6 +11,8 @@ export const THRESHOLDS = {
   hitRate: 0.9, // expected source in the retrieved top 5
   latencyP95Ms: 20_000,
   latencyMedianMs: 10_000,
+  meanFaithfulness: 4.0, // AI judge, 1–5, over answered cases
+  lowFaithfulness: 3, // answers scored at or below this are listed for review
 };
 
 export interface CaseResult {
@@ -20,6 +23,9 @@ export interface CaseResult {
   retrievedFiles: string[];
   searchQueries: string[];
   latencyMs: number; // last turn
+  context?: { file: string; text: string }[]; // retrieved passages shown to the judge (trimmed)
+  judge?: JudgeScore;
+  judgeError?: string;
   error?: string;
 }
 
@@ -36,6 +42,11 @@ export interface Scorecard {
   latencyMedianMs: number;
   latencyP95Ms: number;
   errors: number;
+  judged: number;
+  judgeErrors: number;
+  meanFaithfulness: number | null;
+  meanRelevance: number | null;
+  lowFaithfulness: string[]; // case ids
 }
 
 export function percentile(values: number[], p: number): number {
@@ -58,6 +69,7 @@ export function buildScorecard(results: CaseResult[]): Scorecard {
 
   const retrievals = results.map((r) => r.verdict.retrieval).filter((x): x is NonNullable<typeof x> => x !== null);
   const latencies = results.filter((r) => !r.error).map((r) => r.latencyMs);
+  const judged = results.filter((r) => r.judge);
   const passed = results.filter((r) => r.verdict.pass).length;
   return {
     cases: results.length,
@@ -72,6 +84,11 @@ export function buildScorecard(results: CaseResult[]): Scorecard {
     latencyMedianMs: percentile(latencies, 50),
     latencyP95Ms: percentile(latencies, 95),
     errors: results.filter((r) => r.error).length,
+    judged: judged.length,
+    judgeErrors: results.filter((r) => r.judgeError).length,
+    meanFaithfulness: judged.length ? mean(judged.map((r) => r.judge!.faithfulness)) : null,
+    meanRelevance: judged.length ? mean(judged.map((r) => r.judge!.relevance)) : null,
+    lowFaithfulness: judged.filter((r) => r.judge!.faithfulness <= THRESHOLDS.lowFaithfulness).map((r) => r.case.id),
   };
 }
 
@@ -86,6 +103,7 @@ export function thresholdFailures(s: Scorecard, { partial = false } = {}): strin
   }
   if (s.fabricatedCitations > THRESHOLDS.fabricatedCitations) f.push(`${s.fabricatedCitations} fabricated citation(s)`);
   if (s.hitRate !== null && s.hitRate < THRESHOLDS.hitRate) f.push(`retrieval hit rate ${(s.hitRate * 100).toFixed(1)} % < ${THRESHOLDS.hitRate * 100} %`);
+  if (s.meanFaithfulness !== null && s.meanFaithfulness < THRESHOLDS.meanFaithfulness) f.push(`mean faithfulness ${s.meanFaithfulness.toFixed(2)} < ${THRESHOLDS.meanFaithfulness}`);
   if (partial) return f;
   if (s.latencyP95Ms > THRESHOLDS.latencyP95Ms) f.push(`p95 latency ${(s.latencyP95Ms / 1000).toFixed(1)} s > ${THRESHOLDS.latencyP95Ms / 1000} s`);
   if (s.latencyMedianMs > THRESHOLDS.latencyMedianMs) f.push(`median latency ${(s.latencyMedianMs / 1000).toFixed(1)} s > ${THRESHOLDS.latencyMedianMs / 1000} s`);

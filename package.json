@@ -13,6 +13,7 @@
     "test:ingest": "playwright test --project=ingest",
     "test:resilience": "playwright test --project=resilience",
     "test:offline": "playwright test --project=offline",
+    "test:judge": "playwright test --project=judge",
     "report": "playwright show-report",
     "typecheck": "tsc",
     "format": "prettier --write .",

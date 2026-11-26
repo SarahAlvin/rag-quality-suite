@@ -26,5 +26,6 @@ export default defineConfig({
     { name: 'ingest', testDir: './tests/ingest', timeout: 15 * 60_000 },
     { name: 'resilience', testDir: './tests/resilience', grep: /@destructive/ },
     { name: 'offline', testDir: './tests/offline' },
+    { name: 'judge', testDir: './tests/judge' }, // calibrates the AI judge; needs GROQ_API_KEY, not the chatbot
   ],
 });
