@@ -19,10 +19,10 @@ export const newSessionId = (): string => `qa-${randomUUID()}`;
 
 /** Minimum gap between questions. Back-to-back questions make Gemini's free tier throttle hard (BUG-004),
  *  which measures the test's own load, not real use. Shared across all clients in the test run. */
-const MIN_GAP_MS = 10_000;
+const DEFAULT_GAP_MS = 10_000;
 let lastAskAt = 0;
-async function pace(): Promise<void> {
-  const wait = lastAskAt + MIN_GAP_MS - Date.now();
+async function pace(gapMs: number): Promise<void> {
+  const wait = lastAskAt + gapMs - Date.now();
   if (wait > 0) await new Promise((r) => setTimeout(r, wait));
   lastAskAt = Date.now();
 }
@@ -31,11 +31,15 @@ async function pace(): Promise<void> {
 export const REQUEST_TIMEOUT_MS = 180_000;
 
 export class ChatClient {
-  constructor(private readonly request: APIRequestContext) {}
+  /** @param gapMs minimum time between questions (the eval suite uses a longer gap for long runs) */
+  constructor(
+    private readonly request: APIRequestContext,
+    private readonly gapMs: number = DEFAULT_GAP_MS,
+  ) {}
 
   /** Ask a question. Throws if the reply doesn't match the documented schema. */
   async ask(chatInput: string, sessionId: string = newSessionId()): Promise<ChatResult> {
-    await pace();
+    await pace(this.gapMs);
     const started = Date.now();
     const res = await this.request.post(env.SUT_CHAT_PATH, {
       data: { action: 'sendMessage', sessionId, chatInput },
