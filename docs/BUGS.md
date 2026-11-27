@@ -41,6 +41,7 @@ Everything needed to understand each bug is written out in this file.
 | TD-006 | Mocked reply cited `notes/tea-tasting-log.txt`, a format the real bot never produces; the page showed it as given and the test expected the folder stripped | Mocks mirror the real reply format (bare filenames) |
 | TD-007 | Playwright's headless browser download had been cut off (8 MB of 287 MB), so every UI test failed with `spawn EFTYPE` | Reinstalled; worth a setup check in CI |
 | TD-008 | Resilience tests switched models by importing KB · Config, which un-publishes it until the new publish applies; questions sent after a fixed 10 s wait sometimes hit the gap (HTTP 500 at "Get config") | Wait until n8n lists Config as active, plus 15 s; chat client errors now include HTTP status and body |
+| TD-009 | After rewriting history (author emails → GitHub noreply), the force push made the gitleaks action scan `<root commit>^..HEAD`; the root has no parent, so it scanned 0 bytes and the job failed | Not a leak: a manual run scanned the full history (15 commits, 197 KB, no leaks). Only affects pushes that rewrite from the root |
 
 **Known limitation:** the suite runs against the real knowledge base, which also holds non-fixture documents. Tests must
 not assume they only see the fixtures. Expectations check what must (not) appear, not that nothing else exists.
