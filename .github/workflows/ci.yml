@@ -1,0 +1,56 @@
+# Runs on every push and pull request. Only the parts that need no chatbot run here:
+# type checking, the offline tests (grader, parsers, report escaping) and a secrets scan of the full history.
+# The live suites (api, ui, eval, ingest, resilience) run locally against the chatbot.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  offline-tests:
+    name: Typecheck + offline tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Offline tests (no chatbot, no browser, no secrets)
+        run: npx playwright test --project=offline
+
+      - name: Upload test report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 14
+
+  secrets-scan:
+    name: Secrets scan (gitleaks, full history)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # scan every commit, not just the latest
+
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

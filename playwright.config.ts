@@ -1,19 +1,25 @@
+import 'dotenv/config';
 import { defineConfig, devices } from '@playwright/test';
-import { env } from './src/env';
 
 // One Playwright config, several "projects" (test groups) run with npm scripts:
 //   seed (runs first automatically), api, ui, eval, ingest, resilience (opt-in),
 //   offline (no chatbot needed; runs in CI), fixtures-remove (on demand).
+// The config reads .env without validating it, so the offline tests run where there is no .env (CI).
+// Tests that talk to the chatbot import src/env.ts, which validates every setting and fails fast.
+const env = process.env;
 export default defineConfig({
   testDir: './tests',
   fullyParallel: false, // the chatbot shares free-tier quotas, so tests run one at a time
   workers: 1,
   retries: 0, // LLM non-determinism is measured with repeats, not hidden by retries
   timeout: 120_000,
-  reporter: [['list'], ['html', { outputFolder: 'playwright-report', open: 'never' }]],
+  reporter: process.env.CI
+    ? [['list'], ['github'], ['html', { outputFolder: 'playwright-report', open: 'never' }]]
+    : [['list'], ['html', { outputFolder: 'playwright-report', open: 'never' }]],
+  forbidOnly: Boolean(process.env.CI), // a stray test.only must not silently skip the rest in CI
   use: {
     baseURL: env.SUT_BASE_URL,
-    httpCredentials: { username: env.SUT_USER, password: env.SUT_PASSWORD },
+    httpCredentials: env.SUT_USER && env.SUT_PASSWORD ? { username: env.SUT_USER, password: env.SUT_PASSWORD } : undefined,
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
   },
