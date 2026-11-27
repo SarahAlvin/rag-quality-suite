@@ -7,6 +7,7 @@ import { judge } from '../../src/eval/judge';
 import { gradeCase } from '../../src/eval/rules';
 import { isRefusal } from '../../src/sut/chat';
 import { buildScorecard, thresholdFailures, type CaseResult } from '../../src/eval/scorecard';
+import { buildReport } from '../../src/report/build';
 
 // The golden-set evaluation (FR-EVAL-1..5, 7). One test runs every case so the run can be judged as a whole:
 // individual LLM answers vary, so the run passes on thresholds, not on every single answer.
@@ -81,6 +82,7 @@ test('golden set evaluation', async ({ request }) => {
   const stamp = run.startedAt.replace(/[:.]/g, '-');
   writeFileSync(join(dir, `eval-${stamp}.json`), JSON.stringify(run, null, 2));
   writeFileSync(join(dir, 'eval-latest.json'), JSON.stringify(run, null, 2));
+  console.log(`HTML report: ${buildReport(run)}`);
 
   const pct = (x: number) => `${(x * 100).toFixed(1)} %`;
   console.log('\n=== Scorecard ===');

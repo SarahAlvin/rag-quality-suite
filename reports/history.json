@@ -1,0 +1,28 @@
+[
+  {
+    "startedAt": "2026-11-26T15:25:28.096Z",
+    "cases": 46,
+    "passed": 45,
+    "passRate": 0.9782608695652174,
+    "fabricatedCitations": 0,
+    "hitRate": 1,
+    "mrr": 0.9120370370370369,
+    "latencyMedianMs": 7116,
+    "latencyP95Ms": 17196,
+    "meanFaithfulness": null,
+    "runPassed": false
+  },
+  {
+    "startedAt": "2026-11-26T15:57:06.854Z",
+    "cases": 46,
+    "passed": 46,
+    "passRate": 1,
+    "fabricatedCitations": 0,
+    "hitRate": 1,
+    "mrr": 0.9120370370370369,
+    "latencyMedianMs": 6417,
+    "latencyP95Ms": 12480,
+    "meanFaithfulness": 5,
+    "runPassed": true
+  }
+]

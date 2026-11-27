@@ -27,5 +27,6 @@ export default defineConfig({
     { name: 'resilience', testDir: './tests/resilience', grep: /@destructive/, dependencies: ['seed'] },
     { name: 'offline', testDir: './tests/offline' },
     { name: 'judge', testDir: './tests/judge' }, // calibrates the AI judge; needs GROQ_API_KEY, not the chatbot
+    { name: 'report', testDir: './tests/report' }, // rebuilds reports/index.html from saved runs
   ],
 });

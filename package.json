@@ -15,6 +15,7 @@
     "test:offline": "playwright test --project=offline",
     "test:judge": "playwright test --project=judge",
     "report": "playwright show-report",
+    "report:eval": "playwright test --project=report",
     "typecheck": "tsc",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
