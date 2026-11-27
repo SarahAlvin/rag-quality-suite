@@ -2,6 +2,7 @@ import { test, expect } from '@playwright/test';
 import type { EvalRun } from '../../src/report/history';
 import { summarise } from '../../src/report/history';
 import { renderReport } from '../../src/report/render';
+import { unpublishableDocs } from '../../src/report/publish';
 import { buildScorecard } from '../../src/eval/scorecard';
 
 // Offline: the report shows AI-written text, so it must escape it (our own XSS check, like the chatbot's UI tests).
@@ -17,6 +18,24 @@ function fakeRun(): EvalRun {
   }];
   return { startedAt: '2026-11-27T10:00:00.000Z', filter: [], scorecard: buildScorecard(results), thresholdFailures: [hostile], results };
 }
+
+test.describe('Publishing guard', () => {
+  test('blocks a report that quotes any document outside the public fixtures', () => {
+    const run = fakeRun();
+    run.results[0]!.context = [{ file: 'zarnoor-tea.md', text: 'ok' }, { file: 'my-diary.md', text: 'personal' }];
+    run.results[0]!.citations = ['zarnoor-tea.md'];
+    run.results[0]!.retrievedFiles = ['zarnoor-tea.md', 'bank-letter.pdf'];
+    expect(unpublishableDocs(run)).toEqual(['bank-letter.pdf', 'my-diary.md']);
+  });
+
+  test('allows a report that only quotes fixtures', () => {
+    const run = fakeRun();
+    run.results[0]!.context = [{ file: 'zarnoor-tea.md', text: 'ok' }];
+    run.results[0]!.citations = ['kohsar-falcons.md'];
+    run.results[0]!.retrievedFiles = ['zarnoor-tea.md'];
+    expect(unpublishableDocs(run)).toEqual([]);
+  });
+});
 
 test.describe('HTML report', () => {
   test('escapes every piece of AI-written or case text', () => {

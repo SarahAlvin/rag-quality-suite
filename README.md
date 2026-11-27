@@ -12,18 +12,21 @@ injection, and keeps working when its AI provider fails.
 The system under test is a personal knowledge-base chatbot I built with n8n, Qdrant and Google Gemini (Groq as
 fallback). This repo is the QA side: the test strategy, the tests, the evaluation harness and the bugs they found.
 
+**📊 [Open the live quality report](https://sarahalvin.github.io/rag-quality-suite/)**: every question, answer, check
+and AI-judge verdict from the latest run, plus the trend over runs.
+
 ![Quality report: 46/46 cases passed, 0 fabricated citations, faithfulness 5.00/5, hit rate 100 %](docs/images/report-scorecard.png)
 
 ## Results (latest full run)
 
 | Metric | Result | Target |
 |---|---|---|
-| Golden-set cases passed | **46 / 46** (+ 6/6 hard cases) | ≥ 90 % |
+| Golden-set cases passed | **52 / 52** (incl. 6 hard cases) | ≥ 90 % |
 | Fabricated citations | **0** | 0 |
 | Privacy / prompt-injection cases | **4/4 · 3/3** | 100 % |
-| Retrieval hit rate · MRR | **100 % · 0.91** | ≥ 90 % |
-| AI-judge faithfulness · relevance | **5.00 · 5.00** / 5 | ≥ 4.0 |
-| Latency median · p95 | **6.4 s · 12.5 s** | ≤ 10 s · ≤ 20 s |
+| Retrieval hit rate · MRR | **100 % · 0.92** | ≥ 90 % |
+| AI-judge faithfulness · relevance (40 answers) | **5.00 · 5.00** / 5 | ≥ 4.0 |
+| Latency median · p95 | **2.9 s · 5.8 s** | ≤ 10 s · ≤ 20 s |
 | Real defects found in the chatbot | **7** (1 High, fixed) | |
 
 Honest caveat: the test corpus is small and clean (11 documents), so retrieval is easy. High scores here show good
@@ -94,6 +97,7 @@ npm run test:api              # seeds the fixtures automatically, then the API t
 npm run test:ui
 npm run test:ingest
 npm run test:eval             # full golden set + AI judge (~12 min), writes reports/index.html
+npm run report:publish        # copies the report to site/ for GitHub Pages (refuses if it quotes a non-fixture document)
 npm run test:judge            # calibrate the AI judge
 npm run test:resilience       # opt-in: temporarily breaks the chatbot's model settings, then restores them
 ```

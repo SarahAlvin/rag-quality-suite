@@ -96,9 +96,9 @@ marked `test.fail()` so the suite stays green and flags the fix. Problems in the
 
 ## 9. Current status (2026-11-27)
 
-Latest full evaluation: **46/46 passed**, 0 fabricated citations, hit rate 100 %, MRR 0.91, faithfulness 5.00, median 6.4 s,
-p95 12.5 s (the 6 `hard` cases were added and passed separately). 7 chatbot defects found (BUG-001 to BUG-007; 1 High, fixed),
-8 test defects found and fixed (TD-001 to TD-008).
+Latest full evaluation: **52/52 passed** (incl. 6 `hard` cases), 0 fabricated citations, hit rate 100 %, MRR 0.92,
+faithfulness 5.00, median 2.9 s, p95 5.8 s; three full runs in the trend. 7 chatbot defects found (BUG-001 to BUG-007;
+1 High, fixed), 10 test defects found and fixed (TD-001 to TD-010).
 
 **Known limitation:** the fixture corpus is small and clean, so retrieval is easy; next stress test is a large corpus with
 distractors.

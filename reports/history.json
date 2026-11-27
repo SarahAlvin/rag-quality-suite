@@ -24,5 +24,18 @@
     "latencyP95Ms": 12480,
     "meanFaithfulness": 5,
     "runPassed": true
+  },
+  {
+    "startedAt": "2026-11-27T11:37:37.155Z",
+    "cases": 52,
+    "passed": 52,
+    "passRate": 1,
+    "fabricatedCitations": 0,
+    "hitRate": 1,
+    "mrr": 0.9208333333333332,
+    "latencyMedianMs": 2867,
+    "latencyP95Ms": 5773,
+    "meanFaithfulness": 5,
+    "runPassed": true
   }
 ]
