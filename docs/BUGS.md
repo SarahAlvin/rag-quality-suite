@@ -1,8 +1,9 @@
 # Bug log
 
 Defects found in the system under test (the RAG chatbot). Each one has a test that states the correct behaviour
-and is marked `test.fail()` with the bug ID until it's fixed. All are filed as GitHub Issues on the chatbot repo
-(labels `severity: …` and `found by QA suite`):
+and is marked `test.fail()` with the bug ID until it's fixed. All are also filed as GitHub Issues on the chatbot's
+repository, which is **private** (it holds the owner's personal setup), so the links below only work for its owner.
+Everything needed to understand each bug is written out in this file.
 
 | Bug | Issue |
 |---|---|
@@ -152,7 +153,7 @@ may upload again. On the public Tailscale address the form completes normally.
 
 **Expected:** "Upload finished" page.
 
-**Actual:** the button spins indefinitely. Console: `Access to fetch at 'https://desktop-….ts.net/form-waiting/786/n8n-execution-status?…'
+**Actual:** the button spins indefinitely. Console: `Access to fetch at 'https://<pc-name>.<tailnet>.ts.net/form-waiting/786/n8n-execution-status?…'
 from origin 'http://localhost:8080' has been blocked by CORS policy`.
 
 **Root cause:** after submit, n8n's form script polls `<WEBHOOK_URL>/form-waiting/<execution>/…`. `WEBHOOK_URL` was changed to the
