@@ -1,7 +1,18 @@
 # Bug log
 
 Defects found in the system under test (the RAG chatbot). Each one has a test that states the correct behaviour
-and is marked `test.fail()` with the bug ID until it's fixed. These will also be filed as GitHub Issues (Phase 8).
+and is marked `test.fail()` with the bug ID until it's fixed. All are filed as GitHub Issues on the chatbot repo
+(labels `severity: …` and `found by QA suite`):
+
+| Bug | Issue |
+|---|---|
+| BUG-001 | [rag-knowledge-base#3](https://github.com/SarahAlvin/rag-knowledge-base/issues/3) |
+| BUG-002 | [rag-knowledge-base#7](https://github.com/SarahAlvin/rag-knowledge-base/issues/7) |
+| BUG-003 | [rag-knowledge-base#4](https://github.com/SarahAlvin/rag-knowledge-base/issues/4) |
+| BUG-004 | [rag-knowledge-base#2](https://github.com/SarahAlvin/rag-knowledge-base/issues/2) |
+| BUG-005 | [rag-knowledge-base#1](https://github.com/SarahAlvin/rag-knowledge-base/issues/1) (closed, fixed) |
+| BUG-006 | [rag-knowledge-base#6](https://github.com/SarahAlvin/rag-knowledge-base/issues/6) |
+| BUG-007 | [rag-knowledge-base#5](https://github.com/SarahAlvin/rag-knowledge-base/issues/5) |
 
 | ID | Title | Severity | Status | Found by |
 |---|---|---|---|---|
